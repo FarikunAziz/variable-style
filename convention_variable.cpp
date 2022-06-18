@@ -3,8 +3,7 @@
 #include <cstring>
 #include <string_view>
 
-//data hanya berkisar 0-255, jika menggunakan int saya rasa pemborosan walaupun sistem bisa mengaturnya sendiri
-using simple = std::uint_fast8_t;
+using simple = std::uint_fast64_t;
 
 class StyleCode{
 private:
