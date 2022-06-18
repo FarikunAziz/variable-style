@@ -8,20 +8,28 @@ using simple = std::uint_fast64_t;
 class StyleCode{
 private:
 	std::string m_parameter{};
+	static simple s_kratos;
+private:
+	constexpr bool validate(char **, simple&, simple&)const;
 public:
 	StyleCode() = default;
 public:
-	std::string_view snake_case(simple, char **);
-	std::string_view camel_case(simple, char **);	
-	std::string_view pascal_case(simple, char **);
+	std::string_view snakeCase(simple, char **);
+	std::string_view camelCase(simple, char **);	
+	std::string_view pascalCase(simple, char **);
 	void diag(simple, char **)const;
 	void typo()const;
 	void help(char **)const;
 };
 
+/*********static**********/
+simple StyleCode::s_kratos = 0;
+/*********static**********/
+
+
 /************HELPER*****************************/
 void StyleCode::diag(simple argc, char **argv)const{
-	printf("\n\nargc %d\n", argc);
+	printf("\n\nargc %ld\n", argc);
 	printf("argv\n");
 	for(simple i{0}; i < argc; ++i){
 		std::cout<<i<<" "<<argv[i]<<'\n';
@@ -39,20 +47,25 @@ void StyleCode::help(char **argv)const{
 	printf("BUATAN FARIKUN AZIZ\n");
 	printf("\nPenggunaan : %s -[sc,cs,ps] args....n\n",argv[0]);
 }
+
+constexpr bool StyleCode::validate(char **argv, simple& i, simple& j)const{
+	return ((argv[i][j] >= 'a' and argv[i][j] <= 'z') or (argv[i][j] >= 'A' and argv[i][j] <= 'Z') or (argv[i][j] == ','));
+}
 /************HELPER*****************************/
 
 
 /************************METHODs****************************/
-std::string_view StyleCode::snake_case(simple argc, char **argv){
-	//[0] -> program name,[1] -> first argument for operation
+std::string_view StyleCode::snakeCase(simple argc, char **argv){
 	if(argc == 2){
 		help(argv);
 	}else{
-		//snake case -> snake_case
-		//char ** actually 2d array, so yes indeed need 2 loops to iterate the row (i) and it's content (j), same for the rest
 		for(simple i{2}; i < argc; ++i){
 			for(simple j{0}; j<strlen(argv[i]); ++j){
-				m_parameter.push_back(argv[i][j]);
+				if(validate(argv,i,j)){
+					m_parameter.push_back(argv[i][j]);
+				}else{
+					m_parameter.push_back(',');
+				}
 			}
 			//tidak perlu beri , pada akhir kata baris terakhir
 			if(i < argc - 1){
@@ -60,25 +73,37 @@ std::string_view StyleCode::snake_case(simple argc, char **argv){
 			}
 		}
 
-		//ganti , dengan _
-		std::for_each(m_parameter.begin(), m_parameter.end(),[](char& c){
-			if(c == ','){
-				c = '_';
+		const auto len = m_parameter.size();
+
+		for(int i{0}; i < len; ++i){
+			if(m_parameter[i] == ','){
+				++s_kratos;
+			}else{
+				s_kratos = 0;
 			}
-		});	
+
+			if(s_kratos == 1){
+				m_parameter[i] = '_';
+			}else if(s_kratos > 1){
+				m_parameter[i] = '\0';
+			}
+		}	
 	}
 	
 	return m_parameter;
 }
 
-std::string_view StyleCode::camel_case(simple argc, char **argv){
+std::string_view StyleCode::camelCase(simple argc, char **argv){
 	if(argc == 2){
 		help(argv);
 	}else{
-		//camel case variable -> camelCaseVariable
 		for(simple i{2}; i < argc; ++i){
 			for(simple j{0}; j<strlen(argv[i]); ++j){
-				m_parameter.push_back(argv[i][j]);
+				if(validate(argv,i,j)){
+					m_parameter.push_back(argv[i][j]);
+				}else{
+					m_parameter.push_back(',');
+				}
 			}
 			if(i < argc - 1){
 				m_parameter.push_back(',');
@@ -100,14 +125,17 @@ std::string_view StyleCode::camel_case(simple argc, char **argv){
 	return m_parameter;
 }
 
-std::string_view StyleCode::pascal_case(simple argc, char **argv){
+std::string_view StyleCode::pascalCase(simple argc, char **argv){
 	if(argc == 2){
 		help(argv);
 	}else{	
-		//pascal case -> PascalCase
 		for(simple i{2}; i<argc; ++i){
 			for(simple j{0}; j<strlen(argv[i]); ++j){
-				m_parameter.push_back(argv[i][j]);
+				if(validate(argv,i,j)){
+					m_parameter.push_back(argv[i][j]);
+				}else{
+					m_parameter.push_back(',');
+				}
 			}
 			if(i < argc - 1){
 				m_parameter.push_back(',');
@@ -115,7 +143,7 @@ std::string_view StyleCode::pascal_case(simple argc, char **argv){
 		}
 
 		const auto len = m_parameter.size();
-		char c = toupper(m_parameter[0]);
+		const char c = toupper(m_parameter[0]);
 
 		for(simple i{1}; i<len; ++i){
 			if(m_parameter[i] == ','){
@@ -139,13 +167,13 @@ int main(int argc, char **argv)
 	if(argc > 1){
 		for(simple i{1}; i<argc; ++i){
 			if(strcmp(argv[i],"-sc") == 0){
-				std::cout<<sc.snake_case(argc,argv);
+				std::cout<<sc.snakeCase(argc,argv);
 				break;
 			}else if(strcmp(argv[i],"-cs") == 0){
-				std::cout<<sc.camel_case(argc,argv);
+				std::cout<<sc.camelCase(argc,argv);
 				break;
 			}else if(strcmp(argv[i],"-ps") == 0){
-				std::cout<<sc.pascal_case(argc,argv);
+				std::cout<<sc.pascalCase(argc,argv);
 				break;
 			}else if(strcmp(argv[i],"-h") == 0){
 				sc.help(argv);
